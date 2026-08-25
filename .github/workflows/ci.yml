@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package.json
+      - working-directory: frontend
+        run: npm install --ignore-scripts
+      - working-directory: frontend
+        run: npm run build
+
+  go:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [gateway, orchestrator]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.26.x'
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+      - working-directory: ${{ matrix.module }}
+        run: go test ./...
+      - working-directory: ${{ matrix.module }}
+        run: go vet ./...
+      - working-directory: ${{ matrix.module }}
+        run: go build -trimpath ./...
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - run: bash -n scripts/*.sh
+      - run: node --check frontend/public/sw.js
+      - run: test -z "$(gofmt -l gateway orchestrator)"

@@ -1,0 +1,9 @@
+# Cloudflare Tunnel is used only for the persistent terminal backend.
+# Create a named tunnel and route term.example.com to it.
+tunnel: REPLACE_WITH_TUNNEL_ID
+credentials-file: /etc/cloudflared/REPLACE_WITH_TUNNEL_ID.json
+
+ingress:
+  - hostname: term.example.com
+    service: http://127.0.0.1:8081
+  - service: http_status:404

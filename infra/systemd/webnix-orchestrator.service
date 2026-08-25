@@ -1,0 +1,45 @@
+[Unit]
+Description=WebNix workspace orchestrator
+After=incus.service
+Requires=incus.service
+
+[Service]
+Type=simple
+User=webnix-orchestrator
+Group=webnix-gateway
+SupplementaryGroups=incus-admin
+RuntimeDirectory=webnix
+RuntimeDirectoryMode=0750
+Environment=WEBNIX_SOCKET=/run/webnix/orchestrator.sock
+Environment=WEBNIX_VM_IMAGE=webnix-base
+Environment=WEBNIX_PROFILE=webnix
+Environment=WEBNIX_NETWORK=webnix0
+Environment=WEBNIX_STORAGE_POOL=default
+Environment=WEBNIX_DENYLIST=/etc/webnix/denied-tenants
+Environment=WEBNIX_CPU=2
+Environment=WEBNIX_MEMORY=4GiB
+Environment=WEBNIX_DISK=30GiB
+Environment=WEBNIX_IDLE_TIMEOUT=20m
+Environment=WEBNIX_MAX_SESSIONS=4
+Environment=WEBNIX_MAX_TENANTS=16
+Environment=WEBNIX_MAX_RUNNING_WORKSPACES=3
+ExecStart=/usr/local/bin/webnix-orchestrator
+Restart=on-failure
+RestartSec=2s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+# Do not use MemoryDenyWriteExecute here: the Incus CLI itself does not need JIT,
+# but inherited libraries/tooling can vary between distributions.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+[Unit]
+Description=WebNix public gateway
+After=network-online.target webnix-orchestrator.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=webnix-gateway
+Group=webnix-gateway
+Environment=WEBNIX_LISTEN=127.0.0.1:8080
+Environment=WEBNIX_ORCHESTRATOR_SOCKET=/run/webnix/orchestrator.sock
+Environment=WEBNIX_STATIC_DIR=/var/lib/webnix/frontend
+Environment=WEBNIX_IDENTITY_HEADER=X-Auth-Request-Email
+Environment=WEBNIX_PUBLIC_ORIGIN=https://nix.example.com
+ExecStart=/usr/local/bin/webnix-gateway
+Restart=on-failure
+RestartSec=2s
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,44 @@
+term.example.com:8081 {
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        Cross-Origin-Opener-Policy "same-origin"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()"
+        -Server
+    }
+
+    # OAuth2 Proxy owns only its own endpoints. It is not in the application
+    # data path after authentication.
+    handle /oauth2/* {
+        reverse_proxy 127.0.0.1:4180 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-Uri {uri}
+        }
+    }
+
+    handle {
+        # Never accept an identity supplied by the browser. The value forwarded
+        # to the gateway is copied from oauth2-proxy's authenticated response.
+        request_header -X-Auth-Request-User
+        request_header -X-Auth-Request-Email
+        request_header -X-Auth-Request-Groups
+        request_header -X-Auth-Request-Preferred-Username
+
+        forward_auth 127.0.0.1:4180 {
+            uri /oauth2/auth
+            header_up X-Real-IP {remote_host}
+            copy_headers X-Auth-Request-Email
+
+            @error status 401
+            handle_response @error {
+                redir * /oauth2/sign_in?rd={scheme}://{host}{uri}
+            }
+        }
+
+        reverse_proxy 127.0.0.1:8080
+    }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+result
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Build/cache artifacts
+*.tsbuildinfo
+__pycache__/
+*.py[cod]

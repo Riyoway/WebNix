@@ -192,7 +192,7 @@ function connect() {
     sendResize();
   });
   ws.addEventListener('message', (event) => void consumeMessage(event));
-  ws.addEventListener('close', (event) => {
+  ws.addEventListener('close', () => {
     if (terminalOrigin && reconnectAttempt >= 1) showLoginHint();
     scheduleReconnect();
   });
@@ -208,3 +208,4 @@ window.addEventListener('beforeunload', () => {
 });
 
 connect();
+
